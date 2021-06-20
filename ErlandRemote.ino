@@ -53,16 +53,7 @@ void setup() {
 
 void loop() {
   if (irrecv.decode(&results) && modeTambah) {  // We have captured something.
-    // The capture has stopped at this point.
-    //    decode_type_t protocol = results.decode_type;
-    //    uint16_t size = results.bits;
-    //    bool success = true;
-    // Is it a protocol we don't understand?
-
-    // Convert the results into an array suitable for sendRaw().
-    // resultToRawArray() allocates the memory we need for the array.
     uint16_t *raw_array = resultToRawArray(&results);
-    // Find out how many elements are in the array.
     uint16_t size = getCorrectedRawLength(&results);
 
     StaticJsonDocument<4092> doc;
@@ -82,7 +73,7 @@ void loop() {
 
     irrecv.resume();
 
-        modeTambah = false;
+    modeTambah = false;
   }
   if (ESP_BT.available()) {
     String command;
@@ -92,7 +83,9 @@ void loop() {
       if (kar != '\n') command += String(kar);
     }
     command.trim();
-    
+
+   
+
     StaticJsonDocument<4092> doc;
     DeserializationError error = deserializeJson(doc, command);
     if (error) {
@@ -110,6 +103,11 @@ void loop() {
       irrecv.resume();
     } else if (doc["cmd"] == "tambah") {
       modeTambah = true;
+      Serial.println("OnAdd ...");
+      delay(500);
+    } else if (doc["cmd"] == "cancelTambah") {
+      modeTambah = false;      
+      Serial.println("OnCancel ...");
     }
   }
   yield();
