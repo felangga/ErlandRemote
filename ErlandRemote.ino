@@ -6,42 +6,21 @@
 #include <IRrecv.h>
 #include <IRremoteESP8266.h>
 #include <IRutils.h>
-
 #include "BluetoothSerial.h"
-#define CODENAME "MOB"
 
-// The GPIO an IR detector/demodulator is connected to. Recommended: 14 (D5)
-// Note: GPIO 16 won't work on the ESP8266 as it does not have interrupts.
-const uint16_t kRecvPin = 14;
-
-// GPIO to use to control the IR LED circuit. Recommended: 4 (D2).
-const uint16_t kIrLedPin = 4;
-
-// The Serial connection baud rate.
-// NOTE: Make sure you set your Serial Monitor to the same speed.
-const uint32_t kBaudRate = 115200;
-
-// As this program is a special purpose capture/resender, let's use a larger
-// than expected buffer so we can handle very large IR messages.
-const uint16_t kCaptureBufferSize = 1024;  // 1024 == ~511 bits
-
-// kTimeout is the Nr. of milli-Seconds of no-more-data before we consider a
-// message ended.
-const uint8_t kTimeout = 50;  // Milli-Seconds
-
-// kFrequency is the modulation frequency all UNKNOWN messages will be sent at.
-const uint16_t kFrequency = 38000;  // in Hz. e.g. 38kHz.
+const uint16_t kRecvPin = 14;               // Infrared receiver sensor on pin 14
+const uint16_t kIrLedPin = 4;               // Infrared transmitter sensor on pin 4
+const uint32_t kBaudRate = 115200;          // Serial Baud Rate
+const uint16_t kCaptureBufferSize = 1024;  
+const uint8_t kTimeout = 50;  
+const uint16_t kFrequency = 38000; 
 
 BluetoothSerial ESP_BT;
 
 IRsend irsend(kIrLedPin);
-// The IR receiver.
 IRrecv irrecv(kRecvPin, kCaptureBufferSize, kTimeout, false);
-// Somewhere to store the captured message.
 decode_results results;
 bool modeTambah = false;
-
-
 void setup() {
   irrecv.enableIRIn();  // Start up the IR receiver.
   irsend.begin();       // Start up the IR sender.
@@ -52,7 +31,7 @@ void setup() {
 }
 
 void loop() {
-  if (irrecv.decode(&results) && modeTambah) {  // We have captured something.
+  if (irrecv.decode(&results) && modeTambah) {  
     uint16_t *raw_array = resultToRawArray(&results);
     uint16_t size = getCorrectedRawLength(&results);
 
@@ -83,9 +62,6 @@ void loop() {
       if (kar != '\n') command += String(kar);
     }
     command.trim();
-
-   
-
     StaticJsonDocument<4092> doc;
     DeserializationError error = deserializeJson(doc, command);
     if (error) {
@@ -106,7 +82,7 @@ void loop() {
       Serial.println("OnAdd ...");
       delay(500);
     } else if (doc["cmd"] == "cancelTambah") {
-      modeTambah = false;      
+      modeTambah = false;
       Serial.println("OnCancel ...");
     }
   }
